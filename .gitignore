@@ -1,0 +1,15 @@
+# Directories
+/archive/
+.idea/
+.terraform/
+.vscode/
+
+# Files
+/TODO
+.DS_Store
+.env.local
+backend.tf
+
+# Patterns
+.*.sw[op]
+*.tfvars
