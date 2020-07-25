@@ -4,7 +4,7 @@ default: docker
 
 build:
 	docker build \
-	    --compress --force-rm --no-cache --pull \
+	    --compress --force-rm --pull \
 	    -t `terraform output ambassador_repo_url`:latest \
 	    ./ambassador
 

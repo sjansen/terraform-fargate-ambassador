@@ -28,6 +28,9 @@ type Message struct {
 
 func NewAmbassador(ctx aws.Context, queue string) (*Ambassador, error) {
 	sess, err := session.NewSessionWithOptions(session.Options{
+		Config: aws.Config{
+			CredentialsChainVerboseErrors: aws.Bool(true),
+		},
 		SharedConfigState: session.SharedConfigEnable,
 	})
 	if err != nil {
@@ -98,6 +101,13 @@ func getQueueURL(sess *session.Session, queue string) (*string, error) {
 }
 
 func main() {
+	debug := os.Getenv("DEBUG") != ""
+	if debug {
+		for _, kv := range os.Environ() {
+			fmt.Println(kv)
+		}
+	}
+
 	queue := os.Getenv("QUEUE")
 	if queue == "" {
 		fmt.Fprintln(os.Stderr, "Required setting missing: $QUEUE")

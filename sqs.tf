@@ -1,13 +1,3 @@
-data "aws_iam_policy_document" "queue" {
-  statement {
-    actions = ["SQS:ReceiveMessage", "SQS:DeleteMessage"]
-    principals {
-      type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
-    }
-  }
-}
-
 resource "aws_sqs_queue" "queue" {
   name                       = var.queue_name
   delay_seconds              = 5
@@ -16,5 +6,4 @@ resource "aws_sqs_queue" "queue" {
 
   kms_master_key_id         = "alias/aws/sqs"
   message_retention_seconds = 1209600
-  policy                    = data.aws_iam_policy_document.queue.json
 }
