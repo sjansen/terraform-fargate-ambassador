@@ -12,3 +12,8 @@ variable "queue_name" {
   type = string
   default = "terraform-fargate-ambassador"
 }
+
+variable "vpc_name" {
+  type = string
+  default = "terraform-fargate-ambassador"
+}
