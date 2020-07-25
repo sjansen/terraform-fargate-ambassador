@@ -1,0 +1,12 @@
+version: '2.1'
+services:
+  ambassador:
+    build:
+      context: ./ambassador
+    environment:
+      AWS_PROFILE: "${AWS_PROFILE}"
+      AWS_REGION: "${AWS_REGION}"
+      HOME: "/home"
+      QUEUE: "${QUEUE}"
+    volumes:
+      - $HOME/.aws/:/home/.aws/

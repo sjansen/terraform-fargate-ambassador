@@ -1,4 +1,4 @@
-module github.com/sjansen/terraform-fargate-ambassador
+module github.com/sjansen/terraform-fargate-ambassador/ambassador
 
 go 1.14
 

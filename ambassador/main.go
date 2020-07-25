@@ -108,7 +108,10 @@ func main() {
 	sigs := make(chan os.Signal)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		<-sigs
+		sig := <-sigs
+		log.Info().
+			Str("signal", sig.String()).
+			Msg("Shutdown signal received.")
 		cancel()
 		sigs = nil
 	}()
@@ -118,6 +121,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 	}
 
+	log.Info().Msg("Startup complete.")
 	for sigs != nil {
 		msgs, err := a.ReceiveMessages()
 		if err != nil {
@@ -132,4 +136,5 @@ func main() {
 			}
 		}
 	}
+	log.Info().Msg("Shutdown complete.")
 }
