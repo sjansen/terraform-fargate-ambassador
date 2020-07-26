@@ -1,3 +1,8 @@
+variable "autoscale_target" {
+  type    = number
+  default = 0.75
+}
+
 variable "aws_region" {
   type    = string
   default = "us-east-2"
@@ -6,6 +11,11 @@ variable "aws_region" {
 variable "debug" {
   type    = bool
   default = false
+}
+
+variable "desired_count" {
+  type    = number
+  default = 0
 }
 
 variable "ecr_prefix" {

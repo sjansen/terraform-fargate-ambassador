@@ -24,7 +24,7 @@ resource "aws_ecs_service" "app" {
   cluster              = aws_ecs_cluster.app.id
   task_definition      = aws_ecs_task_definition.app.arn
   force_new_deployment = true
-  desired_count        = 1
+  desired_count        = var.desired_count
   network_configuration {
     assign_public_ip = false
     security_groups = [
@@ -35,12 +35,15 @@ resource "aws_ecs_service" "app" {
     ]
   }
   depends_on = [aws_cloudwatch_log_group.app]
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
 }
 
 resource "aws_ecs_task_definition" "app" {
   family                   = var.ecs_name
   requires_compatibilities = ["FARGATE"]
-  execution_role_arn       = aws_iam_role.execution_role.arn
+  execution_role_arn       = aws_iam_role.ecsTaskExecutionRole.arn
   task_role_arn            = aws_iam_role.task_role.arn
   cpu                      = 256
   memory                   = 512
