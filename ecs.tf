@@ -65,7 +65,8 @@ resource "aws_ecs_task_definition" "app" {
         "awslogs-group": "/ecs/${var.ecs_name}",
         "awslogs-stream-prefix": "ecs"
       }
-    }
+    },
+    "readonlyRootFilesystem": true
   }
 ]
 EOF

@@ -10,3 +10,6 @@ services:
       QUEUE: "${QUEUE}"
     volumes:
       - $HOME/.aws/:/home/.aws/
+  application:
+    build:
+      context: ./application

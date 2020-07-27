@@ -7,9 +7,22 @@ resource "aws_ecr_repository" "ambassador" {
   }
 }
 
-resource "aws_ecr_lifecycle_policy" "default" {
-  repository = aws_ecr_repository.ambassador.name
+resource "aws_ecr_repository" "application" {
+  name                 = var.ecr_prefix == "" ? "application" : "${var.ecr_prefix}-application"
+  image_tag_mutability = "IMMUTABLE"
 
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "aws_ecr_lifecycle_policy" "for" {
+  for_each = {
+    ambassador = aws_ecr_repository.ambassador.name
+    application = aws_ecr_repository.application.name
+  }
+
+  repository = each.value
   policy = <<EOF
 {
     "rules": [

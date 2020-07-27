@@ -129,6 +129,7 @@ func main() {
 	a, err := NewAmbassador(ctx, queue)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 
 	log.Info().Msg("Startup complete.")

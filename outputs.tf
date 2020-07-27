@@ -6,6 +6,14 @@ output "ambassador_repo_url" {
   value = aws_ecr_repository.ambassador.repository_url
 }
 
-output "ecr_registry" {
+output "application_repo_name" {
+  value = aws_ecr_repository.application.name
+}
+
+output "application_repo_url" {
+  value = aws_ecr_repository.application.repository_url
+}
+
+output "registry" {
   value = split("/", aws_ecr_repository.ambassador.repository_url)[0]
 }
