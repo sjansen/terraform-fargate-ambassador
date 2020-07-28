@@ -67,7 +67,9 @@ resource "aws_ecs_task_definition" "app" {
         "awslogs-datetime-format": "%Y-%m-%dT%H:%M:%S%LZ"
       }
     },
-    "readonlyRootFilesystem": true
+    "readonlyRootFilesystem": true,
+    "startTimeout": 120,
+    "stopTimeout": 120
   }
 ]
 EOF
