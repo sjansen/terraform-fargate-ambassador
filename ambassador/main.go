@@ -56,6 +56,9 @@ func main() {
 	go HandleSignals(ctx, cancel, wg)
 	wg.Add(1)
 
+	go MonitorDiskUsage(ctx, wg)
+	wg.Add(1)
+
 	a, err := NewAmbassador(ctx, cfg)
 	if err != nil {
 		logger.Fatalw("Failed to create Ambassador.",
