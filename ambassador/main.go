@@ -3,17 +3,23 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/rs/zerolog/log"
+	"github.com/mattn/go-isatty"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
+
+var logger *zap.SugaredLogger
 
 type Ambassador struct {
 	ctx   aws.Context
@@ -103,9 +109,12 @@ func getQueueURL(sess *session.Session, queue string) (*string, error) {
 func main() {
 	debug := os.Getenv("DEBUG") != ""
 	if debug {
+		logger = NewLogger(3)
 		for _, kv := range os.Environ() {
 			fmt.Println(kv)
 		}
+	} else {
+		logger = NewLogger(2)
 	}
 
 	queue := os.Getenv("QUEUE")
@@ -119,9 +128,9 @@ func main() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
-		log.Info().
-			Str("signal", sig.String()).
-			Msg("Shutdown signal received.")
+		logger.Infow("Shutdown signal received.",
+			"signal", sig.String(),
+		)
 		cancel()
 		sigs = nil
 	}()
@@ -132,20 +141,66 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Info().Msg("Startup complete.")
+	logger.Info("Startup complete.")
 	for sigs != nil {
 		msgs, err := a.ReceiveMessages()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		} else if len(msgs) > 0 {
-			log.Info().
-				Int("count", len(msgs)).
-				Msg("New message(s) received.")
+			logger.Infow("New message(s) received.",
+				"count", len(msgs),
+			)
 			for _, msg := range msgs {
 				fmt.Println(msg.Body)
 				a.DeleteMessage(msg.Handle)
+				time.Sleep(1 * time.Second)
 			}
 		}
 	}
-	log.Info().Msg("Shutdown complete.")
+	logger.Info("Shutdown complete.")
+}
+
+// NewLogger returns a logger
+//
+// Valid levels are:
+//   0 = errors only,
+//   1 = include warnings,
+//   2 = include informational messages,
+//   3 = include debug messages.
+func NewLogger(verbosity int) *zap.SugaredLogger {
+	var level zapcore.Level
+	switch {
+	case verbosity >= 3:
+		level = zapcore.DebugLevel
+	case verbosity == 2:
+		level = zapcore.InfoLevel
+	case verbosity == 1:
+		level = zapcore.WarnLevel
+	default:
+		level = zapcore.ErrorLevel
+	}
+
+	var stdout io.Writer = os.Stdout
+	encoder := zapcore.CapitalLevelEncoder
+	if x, ok := stdout.(interface{ Fd() uintptr }); ok {
+		if isatty.IsTerminal(x.Fd()) {
+			encoder = zapcore.CapitalColorLevelEncoder
+		}
+	}
+	cfg := zapcore.EncoderConfig{
+		LevelKey:       "level",
+		MessageKey:     "msg",
+		NameKey:        "logger",
+		TimeKey:        "timestamp",
+		EncodeDuration: zapcore.StringDurationEncoder,
+		EncodeLevel:    encoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+	}
+	core := zapcore.NewCore(
+		zapcore.NewConsoleEncoder(cfg),
+		zapcore.AddSync(stdout),
+		level,
+	)
+
+	return zap.New(core).Sugar()
 }

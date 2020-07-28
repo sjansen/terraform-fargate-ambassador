@@ -28,7 +28,7 @@ resource "aws_ecr_lifecycle_policy" "for" {
     "rules": [
         {
             "rulePriority": 10,
-            "description": "Keep last 3 dev images",
+            "description": "Keep last 10 dev images",
             "selection": {
                 "tagStatus": "tagged",
                 "tagPrefixList": ["dev-"],

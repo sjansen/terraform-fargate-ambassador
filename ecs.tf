@@ -63,7 +63,8 @@ resource "aws_ecs_task_definition" "app" {
       "options": {
         "awslogs-region": "${var.aws_region}",
         "awslogs-group": "/ecs/${var.ecs_name}",
-        "awslogs-stream-prefix": "ecs"
+        "awslogs-stream-prefix": "ecs",
+        "awslogs-datetime-format": "%Y-%m-%dT%H:%M:%S%LZ"
       }
     },
     "readonlyRootFilesystem": true

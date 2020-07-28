@@ -13,3 +13,5 @@ services:
   application:
     build:
       context: ./application
+    ports:
+      - "8080:8080"
