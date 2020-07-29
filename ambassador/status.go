@@ -9,6 +9,20 @@ import (
 	"github.com/shirou/gopsutil/disk"
 )
 
+type Status struct {
+	Healthy       bool
+	UptimeHuman   string
+	UptimeSeconds float64
+}
+
+func GetStatus() Status {
+	return Status{
+		Healthy:       true,
+		UptimeHuman:   humanize.Time(startTime),
+		UptimeSeconds: time.Since(startTime).Seconds(),
+	}
+}
+
 func MonitorDiskUsage(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 

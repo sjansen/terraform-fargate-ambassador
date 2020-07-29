@@ -16,6 +16,7 @@ import (
 )
 
 var logger *zap.SugaredLogger
+var startTime time.Time
 
 type Message struct {
 	Body   string
@@ -36,6 +37,8 @@ func getQueueURL(sess *session.Session, queue string) (*string, error) {
 }
 
 func main() {
+	startTime = time.Now()
+
 	cfg, err := NewConfig()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())

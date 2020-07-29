@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"net"
 	"net/http"
 	"sync"
@@ -13,6 +14,7 @@ import (
 func NewServer() *http.Server {
 	mux := &http.ServeMux{}
 	mux.HandleFunc("/echo", echoHandler)
+	mux.HandleFunc("/status", statusHandler)
 	return &http.Server{
 		Addr:        "0.0.0.0:8000",
 		Handler:     requestLogger(mux),
@@ -62,4 +64,24 @@ func requestLogger(h http.Handler) http.Handler {
 		)
 	}
 	return http.HandlerFunc(fn)
+}
+
+func statusHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	status := GetStatus()
+	b, err := json.Marshal(status)
+	if err != nil {
+		logger.Errorw("Encoding server status failed.",
+			"error", err,
+		)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(b)
 }
