@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/url"
 	"os"
 	"sync"
 	"time"
@@ -78,11 +80,13 @@ OuterLoop:
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 			} else if len(msgs) > 0 {
-				logger.Infow("New messages received.",
+				logger.Infow("Message(s) received.",
 					"count", len(msgs),
 				)
 				for _, msg := range msgs {
-					fmt.Println(msg.Body)
+					http.PostForm(cfg.AppURL+"/echo",
+						url.Values{"msg": {msg.Body}},
+					)
 					a.DeleteMessage(msg.Handle)
 					time.Sleep(1 * time.Second)
 				}

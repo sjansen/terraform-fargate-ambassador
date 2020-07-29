@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"sync"
@@ -13,9 +14,10 @@ import (
 
 func NewServer() *http.Server {
 	mux := &http.ServeMux{}
+	mux.HandleFunc("/echo", echoHandler)
 	return &http.Server{
 		Addr:        "0.0.0.0:8080",
-		Handler:     logRequestHandler(mux),
+		Handler:     requestLogger(mux),
 		IdleTimeout: 1 * time.Minute,
 	}
 }
@@ -29,16 +31,32 @@ func WaitForShutdown(ctx context.Context, srv *http.Server, wg *sync.WaitGroup) 
 	wg.Done()
 }
 
-func logRequestHandler(h http.Handler) http.Handler {
+func echoHandler(w http.ResponseWriter, r *http.Request) {
+	switch {
+	case r.Method != "POST":
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	case r.ParseForm() != nil:
+		w.WriteHeader(http.StatusBadRequest)
+	case r.PostFormValue("msg") == "":
+		w.WriteHeader(http.StatusBadRequest)
+	default:
+		w.WriteHeader(http.StatusOK)
+		msg := r.PostFormValue("msg")
+		fmt.Println(msg)
+	}
+}
+
+func requestLogger(h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
+		contentType := r.Header.Get("Content-type")
 		m := httpsnoop.CaptureMetrics(h, w, r)
 		remote, _, _ := net.SplitHostPort(r.RemoteAddr)
 		log.Info().
 			Str("method", r.Method).
 			Str("uri", r.URL.String()).
 			Int("code", m.Code).
-			Int64("size", m.Written).
 			Dur("time", m.Duration/time.Millisecond).
+			Str("ct", contentType).
 			Str("referer", r.Header.Get("Referer")).
 			Str("remote", remote).
 			Str("ua", r.Header.Get("User-Agent")).

@@ -1,3 +1,8 @@
+variable "app_url" {
+  type    = string
+  default = "http://127.0.0.1:8080"
+}
+
 variable "autoscale_target" {
   type    = number
   default = 0.75

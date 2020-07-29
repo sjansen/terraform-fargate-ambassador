@@ -49,10 +49,14 @@ resource "aws_ecs_task_definition" "app" {
   memory                   = 512
   network_mode             = "awsvpc"
   container_definitions    = <<EOF
-[
-  {
+[{
     "name": "ambassador",
+    "dependsOn": [{
+      "containerName": "application",
+      "condition": "START"
+    }],
     "environment": [
+      {"name": "APPURL", "value": "${var.app_url}"},
       {"name": "DEBUG", "value": "${var.debug ? "enabled" : ""}"},
       {"name": "QUEUE", "value": "${var.queue_name}"}
     ],
@@ -70,7 +74,24 @@ resource "aws_ecs_task_definition" "app" {
     "readonlyRootFilesystem": true,
     "startTimeout": 120,
     "stopTimeout": 120
-  }
-]
+}, {
+    "name": "application",
+    "environment": [
+      {"name": "DEBUG", "value": "${var.debug ? "enabled" : ""}"}
+    ],
+    "essential": true,
+    "image": "${aws_ecr_repository.application.repository_url}:latest",
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-region": "${var.aws_region}",
+        "awslogs-group": "/ecs/${var.ecs_name}",
+        "awslogs-stream-prefix": "ecs"
+      }
+    },
+    "readonlyRootFilesystem": true,
+    "startTimeout": 120,
+    "stopTimeout": 120
+}]
 EOF
 }

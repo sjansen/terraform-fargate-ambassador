@@ -4,14 +4,19 @@ services:
     build:
       context: ./ambassador
     environment:
+      APPURL: "http://application:8080"
       AWS_PROFILE: "${AWS_PROFILE}"
       AWS_REGION: "${AWS_REGION}"
       HOME: "/home"
       QUEUE: "${QUEUE}"
+    links:
+      - application
     volumes:
       - $HOME/.aws/:/home/.aws/
   application:
     build:
       context: ./application
+    expose:
+      - "8080"
     ports:
       - "8080:8080"
