@@ -6,22 +6,22 @@ import (
 )
 
 type Config struct {
-	Debug  bool
-	AppURL string
-	Queue  string
+	Debug   bool
+	LinkURL string
+	Queue   string
 }
 
 func NewConfig() (*Config, error) {
 	cfg := &Config{
-		Debug:  os.Getenv("DEBUG") != "",
-		AppURL: os.Getenv("APPURL"),
-		Queue:  os.Getenv("QUEUE"),
+		Debug:   os.Getenv("DEBUG") != "",
+		LinkURL: os.Getenv("APPLICATION"),
+		Queue:   os.Getenv("QUEUE"),
 	}
 
 	var err error
 	switch {
-	case cfg.AppURL == "":
-		err = errors.New("Missing required setting: $APPURL")
+	case cfg.LinkURL == "":
+		err = errors.New("Missing required setting: $APPLICATION")
 	case cfg.Queue == "":
 		err = errors.New("Missing required setting: $QUEUE")
 	}

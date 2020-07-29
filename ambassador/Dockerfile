@@ -15,3 +15,4 @@ COPY --from=builder /main /app/
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 WORKDIR /app
 ENTRYPOINT ["./main"]
+EXPOSE 8000

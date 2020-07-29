@@ -56,7 +56,7 @@ resource "aws_ecs_task_definition" "app" {
       "condition": "START"
     }],
     "environment": [
-      {"name": "APPURL", "value": "${var.app_url}"},
+      {"name": "APPLICATION", "value": "${var.application_url}"},
       {"name": "DEBUG", "value": "${var.debug ? "enabled" : ""}"},
       {"name": "QUEUE", "value": "${var.queue_name}"}
     ],
@@ -77,6 +77,7 @@ resource "aws_ecs_task_definition" "app" {
 }, {
     "name": "application",
     "environment": [
+      {"name": "AMBASSADOR", "value": "${var.ambassador_url}"},
       {"name": "DEBUG", "value": "${var.debug ? "enabled" : ""}"}
     ],
     "essential": true,

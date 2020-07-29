@@ -2,22 +2,19 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 	"sync"
 	"time"
 
 	"github.com/felixge/httpsnoop"
-	"github.com/rs/zerolog/log"
 )
 
 func NewServer() *http.Server {
 	mux := &http.ServeMux{}
 	mux.HandleFunc("/echo", echoHandler)
 	return &http.Server{
-		Addr:        "0.0.0.0:8080",
+		Addr:        "0.0.0.0:8000",
 		Handler:     requestLogger(mux),
 		IdleTimeout: 1 * time.Minute,
 	}
@@ -26,7 +23,7 @@ func NewServer() *http.Server {
 func WaitForShutdown(ctx context.Context, srv *http.Server, wg *sync.WaitGroup) {
 	select {
 	case <-ctx.Done():
-		log.Info().Msg("Shutdown initiated.")
+		logger.Info("Shutdown initiated.")
 		srv.Shutdown(ctx)
 	}
 	wg.Done()
@@ -43,9 +40,8 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		w.WriteHeader(http.StatusOK)
 		msg := r.PostFormValue("msg")
-		fmt.Println(msg)
-		http.PostForm(cfg.LinkURL+"/echo",
-			url.Values{"msg": {msg}},
+		logger.Infow("echo",
+			"msg", msg,
 		)
 	}
 }
@@ -55,16 +51,15 @@ func requestLogger(h http.Handler) http.Handler {
 		contentType := r.Header.Get("Content-type")
 		m := httpsnoop.CaptureMetrics(h, w, r)
 		remote, _, _ := net.SplitHostPort(r.RemoteAddr)
-		log.Info().
-			Str("method", r.Method).
-			Str("uri", r.URL.String()).
-			Int("code", m.Code).
-			Dur("time", m.Duration/time.Millisecond).
-			Str("ct", contentType).
-			Str("referer", r.Header.Get("Referer")).
-			Str("remote", remote).
-			Str("ua", r.Header.Get("User-Agent")).
-			Send()
+		logger.Infow(r.Method,
+			"uri", r.URL.String(),
+			"code", m.Code,
+			"time", m.Duration/time.Millisecond,
+			"ct", contentType,
+			"referer", r.Header.Get("Referer"),
+			"remote", remote,
+			"ua", r.Header.Get("User-Agent"),
+		)
 	}
 	return http.HandlerFunc(fn)
 }

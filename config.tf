@@ -1,4 +1,9 @@
-variable "app_url" {
+variable "ambassador_url" {
+  type    = string
+  default = "http://127.0.0.1:8000"
+}
+
+variable "application_url" {
   type    = string
   default = "http://127.0.0.1:8080"
 }

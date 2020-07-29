@@ -12,12 +12,15 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var cfg *Config
+
 func main() {
-	cfg, err := NewConfig()
+	config, err := NewConfig()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
+	cfg = config
 
 	if !cfg.Debug {
 		log.Logger = log.Level(zerolog.InfoLevel)

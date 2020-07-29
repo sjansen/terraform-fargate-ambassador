@@ -1,17 +1,26 @@
 package main
 
 import (
+	"errors"
 	"os"
 )
 
 type Config struct {
-	Debug bool
+	Debug   bool
+	LinkURL string
 }
 
 func NewConfig() (*Config, error) {
 	cfg := &Config{
-		Debug: os.Getenv("DEBUG") != "",
+		LinkURL: os.Getenv("AMBASSADOR"),
+		Debug:   os.Getenv("DEBUG") != "",
 	}
 
-	return cfg, nil
+	var err error
+	switch {
+	case cfg.LinkURL == "":
+		err = errors.New("Missing required setting: $AMBASSADOR")
+	}
+
+	return cfg, err
 }

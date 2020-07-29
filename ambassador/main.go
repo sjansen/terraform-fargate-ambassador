@@ -61,6 +61,19 @@ func main() {
 	go MonitorDiskUsage(ctx, wg)
 	wg.Add(1)
 
+	srv := NewServer()
+	go WaitForShutdown(ctx, srv, wg)
+	wg.Add(1)
+
+	go func() {
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			logger.Errorf("ListenAndServe: %v", err)
+			cancel()
+		}
+		wg.Done()
+	}()
+	wg.Add(1)
+
 	a, err := NewAmbassador(ctx, cfg)
 	if err != nil {
 		logger.Fatalw("Failed to create Ambassador.",
@@ -84,7 +97,7 @@ OuterLoop:
 					"count", len(msgs),
 				)
 				for _, msg := range msgs {
-					http.PostForm(cfg.AppURL+"/echo",
+					http.PostForm(cfg.LinkURL+"/echo",
 						url.Values{"msg": {msg.Body}},
 					)
 					a.DeleteMessage(msg.Handle)
