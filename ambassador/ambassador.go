@@ -14,6 +14,11 @@ type Ambassador struct {
 	sqs   *sqs.SQS
 }
 
+type Message struct {
+	Body   string
+	Handle string
+}
+
 func NewAmbassador(ctx aws.Context, cfg *Config) (*Ambassador, error) {
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Config: aws.Config{

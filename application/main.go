@@ -34,8 +34,10 @@ func main() {
 	go HandleSignals(ctx, cancel, wg)
 	wg.Add(1)
 
-	go MonitorDiskUsage(ctx, wg)
-	wg.Add(1)
+	if cfg.Debug {
+		go MonitorDiskUsage(ctx, wg)
+		wg.Add(1)
+	}
 
 	srv := NewServer()
 	go WaitForShutdown(ctx, srv, wg)

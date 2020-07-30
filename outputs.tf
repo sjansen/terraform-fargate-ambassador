@@ -17,3 +17,7 @@ output "application_repo_url" {
 output "registry" {
   value = split("/", aws_ecr_repository.ambassador.repository_url)[0]
 }
+
+output "queue_url" {
+  value = aws_sqs_queue.queue.id
+}

@@ -12,14 +12,14 @@ import (
 type Status struct {
 	Healthy       bool
 	UptimeHuman   string
-	UptimeSeconds float64
+	UptimeSeconds uint
 }
 
 func GetStatus() Status {
 	return Status{
 		Healthy:       true,
 		UptimeHuman:   humanize.Time(startTime),
-		UptimeSeconds: time.Since(startTime).Seconds(),
+		UptimeSeconds: uint(time.Since(startTime).Seconds()),
 	}
 }
 
@@ -55,12 +55,12 @@ func reportDiskUsage(partitions []disk.PartitionStat) {
 		} else {
 			logger.Infow(p.Mountpoint,
 				"type", p.Fstype,
-				"pct", u.UsedPercent,
+				"pct", humanize.FtoaWithDigits(u.UsedPercent, 1)+"%",
 				"used", humanize.IBytes(u.Used),
 				"total", humanize.IBytes(u.Total),
-				"ipct", u.InodesUsedPercent,
-				"iused", u.InodesUsed,
-				"itotal", u.InodesTotal,
+				"ipct", humanize.FtoaWithDigits(u.InodesUsedPercent, 1)+"%",
+				"iused", humanize.SIWithDigits(float64(u.InodesUsed), 0, ""),
+				"itotal", humanize.SIWithDigits(float64(u.InodesTotal), 0, ""),
 			)
 		}
 	}

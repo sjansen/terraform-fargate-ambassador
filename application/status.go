@@ -40,12 +40,12 @@ func reportDiskUsage(partitions []disk.PartitionStat) {
 		} else {
 			log.Info().
 				Str("type", p.Fstype).
-				Float64("pct", u.UsedPercent).
+				Str("pct", humanize.FtoaWithDigits(u.UsedPercent, 1)+"%").
 				Str("used", humanize.IBytes(u.Used)).
 				Str("total", humanize.IBytes(u.Total)).
-				Float64("ipct", u.InodesUsedPercent).
-				Uint64("iused", u.InodesUsed).
-				Uint64("itotal", u.InodesTotal).
+				Str("ipct", humanize.FtoaWithDigits(u.InodesUsedPercent, 1)+"%").
+				Str("iused", humanize.SIWithDigits(float64(u.InodesUsed), 0, "")).
+				Str("itotal", humanize.SIWithDigits(float64(u.InodesTotal), 0, "")).
 				Msg(p.Mountpoint)
 		}
 	}

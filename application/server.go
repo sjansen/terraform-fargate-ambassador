@@ -55,7 +55,7 @@ func requestLogger(h http.Handler) http.Handler {
 		contentType := r.Header.Get("Content-type")
 		m := httpsnoop.CaptureMetrics(h, w, r)
 		remote, _, _ := net.SplitHostPort(r.RemoteAddr)
-		log.Info().
+		log.Debug().
 			Str("method", r.Method).
 			Str("uri", r.URL.String()).
 			Int("code", m.Code).

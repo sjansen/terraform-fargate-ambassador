@@ -56,11 +56,19 @@ resource "aws_ecs_task_definition" "app" {
       "condition": "START"
     }],
     "environment": [
+      {"name": "AMBASSADOR", "value": "${var.ambassador_url}"},
       {"name": "APPLICATION", "value": "${var.application_url}"},
       {"name": "DEBUG", "value": "${var.debug ? "enabled" : ""}"},
       {"name": "QUEUE", "value": "${var.queue_name}"}
     ],
     "essential": true,
+    "healthCheck": {
+      "command": ["CMD", "./main", "check-health"],
+      "interval": 60,
+      "timeout": 5,
+      "retries": 3,
+      "startPeriod": null
+    },
     "image": "${aws_ecr_repository.ambassador.repository_url}:latest",
     "logConfiguration": {
       "logDriver": "awslogs",

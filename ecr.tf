@@ -18,12 +18,12 @@ resource "aws_ecr_repository" "application" {
 
 resource "aws_ecr_lifecycle_policy" "for" {
   for_each = {
-    ambassador = aws_ecr_repository.ambassador.name
+    ambassador  = aws_ecr_repository.ambassador.name
     application = aws_ecr_repository.application.name
   }
 
   repository = each.value
-  policy = <<EOF
+  policy     = <<EOF
 {
     "rules": [
         {

@@ -13,6 +13,9 @@ RUN cd /go/src/${PKG_NAME} && \
 FROM scratch
 COPY --from=builder /main /app/
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+EXPOSE 8000
 WORKDIR /app
 ENTRYPOINT ["./main"]
-EXPOSE 8000
+CMD ["server"]
+HEALTHCHECK --interval=1m --timeout=3s \
+  CMD ["./main", "check-health"]

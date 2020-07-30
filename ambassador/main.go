@@ -1,14 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"net/http"
-	"net/url"
 	"os"
-	"sync"
 	"time"
 
+	"github.com/alecthomas/kong"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -18,9 +15,9 @@ import (
 var logger *zap.SugaredLogger
 var startTime time.Time
 
-type Message struct {
-	Body   string
-	Handle string
+var CLI struct {
+	CheckHealth CheckHealth `cmd help:"Request status from ambassador server."`
+	Server      Server      `cmd help:"Run ambassador in server mode."`
 }
 
 func getQueueURL(sess *session.Session, queue string) (*string, error) {
@@ -54,62 +51,7 @@ func main() {
 		logger = NewLogger(2)
 	}
 
-	logger.Info("Startup initiated.")
-	ctx, cancel := context.WithCancel(context.Background())
-	wg := &sync.WaitGroup{}
-
-	go HandleSignals(ctx, cancel, wg)
-	wg.Add(1)
-
-	go MonitorDiskUsage(ctx, wg)
-	wg.Add(1)
-
-	srv := NewServer()
-	go WaitForShutdown(ctx, srv, wg)
-	wg.Add(1)
-
-	go func() {
-		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-			logger.Errorf("ListenAndServe: %v", err)
-			cancel()
-		}
-		wg.Done()
-	}()
-	wg.Add(1)
-
-	a, err := NewAmbassador(ctx, cfg)
-	if err != nil {
-		logger.Fatalw("Failed to create Ambassador.",
-			"error", err,
-		)
-	}
-	logger.Info("Startup complete.")
-
-OuterLoop:
-	for {
-		select {
-		case <-ctx.Done():
-			logger.Info("Shutdown initiated.")
-			break OuterLoop
-		default:
-			msgs, err := a.ReceiveMessages()
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
-			} else if len(msgs) > 0 {
-				logger.Infow("Message(s) received.",
-					"count", len(msgs),
-				)
-				for _, msg := range msgs {
-					http.PostForm(cfg.LinkURL+"/echo",
-						url.Values{"msg": {msg.Body}},
-					)
-					a.DeleteMessage(msg.Handle)
-					time.Sleep(1 * time.Second)
-				}
-			}
-		}
-	}
-
-	wg.Wait()
-	logger.Info("Shutdown complete.")
+	cli := kong.Parse(&CLI)
+	err = cli.Run(cfg)
+	cli.FatalIfErrorf(err)
 }

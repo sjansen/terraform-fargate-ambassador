@@ -3,13 +3,85 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
+	"net/url"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/felixge/httpsnoop"
 )
+
+type Server struct {
+}
+
+func (s *Server) Run(cfg *Config) error {
+	logger.Info("Startup initiated.")
+	ctx, cancel := context.WithCancel(context.Background())
+	wg := &sync.WaitGroup{}
+
+	go HandleSignals(ctx, cancel, wg)
+	wg.Add(1)
+
+	if cfg.Debug {
+		go MonitorDiskUsage(ctx, wg)
+		wg.Add(1)
+	}
+
+	srv := NewServer()
+	go WaitForShutdown(ctx, srv, wg)
+	wg.Add(1)
+
+	go func() {
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			logger.Errorf("ListenAndServe: %v", err)
+			cancel()
+		}
+		wg.Done()
+	}()
+	wg.Add(1)
+
+	a, err := NewAmbassador(ctx, cfg)
+	if err != nil {
+		logger.Errorw("Failed to create Ambassador.",
+			"error", err,
+		)
+		return err
+	}
+	logger.Info("Startup complete.")
+
+OuterLoop:
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Info("Shutdown initiated.")
+			break OuterLoop
+		default:
+			msgs, err := a.ReceiveMessages()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			} else if len(msgs) > 0 {
+				logger.Infow("Message(s) received.",
+					"count", len(msgs),
+				)
+				for _, msg := range msgs {
+					http.PostForm(cfg.ApplicationURL+"/echo",
+						url.Values{"msg": {msg.Body}},
+					)
+					a.DeleteMessage(msg.Handle)
+					time.Sleep(1 * time.Second)
+				}
+			}
+		}
+	}
+
+	wg.Wait()
+	logger.Info("Shutdown complete.")
+
+	return nil
+}
 
 func NewServer() *http.Server {
 	mux := &http.ServeMux{}
@@ -53,7 +125,7 @@ func requestLogger(h http.Handler) http.Handler {
 		contentType := r.Header.Get("Content-type")
 		m := httpsnoop.CaptureMetrics(h, w, r)
 		remote, _, _ := net.SplitHostPort(r.RemoteAddr)
-		logger.Infow(r.Method,
+		logger.Debugw(r.Method,
 			"uri", r.URL.String(),
 			"code", m.Code,
 			"time", m.Duration/time.Millisecond,
