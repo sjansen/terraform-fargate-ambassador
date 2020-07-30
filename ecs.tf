@@ -89,6 +89,13 @@ resource "aws_ecs_task_definition" "app" {
       {"name": "DEBUG", "value": "${var.debug ? "enabled" : ""}"}
     ],
     "essential": true,
+    "healthCheck": {
+      "command": ["CMD", "./main", "check-health"],
+      "interval": 60,
+      "timeout": 5,
+      "retries": 3,
+      "startPeriod": null
+    },
     "image": "${aws_ecr_repository.application.repository_url}:latest",
     "logConfiguration": {
       "logDriver": "awslogs",

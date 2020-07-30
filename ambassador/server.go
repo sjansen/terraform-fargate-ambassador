@@ -14,8 +14,7 @@ import (
 	"github.com/felixge/httpsnoop"
 )
 
-type Server struct {
-}
+type Server struct{}
 
 func (s *Server) Run(cfg *Config) error {
 	logger.Info("Startup initiated.")
@@ -26,6 +25,10 @@ func (s *Server) Run(cfg *Config) error {
 	wg.Add(1)
 
 	if cfg.Debug {
+		for _, kv := range os.Environ() {
+			fmt.Println(kv)
+		}
+
 		go MonitorDiskUsage(ctx, wg)
 		wg.Add(1)
 	}

@@ -1,20 +1,27 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	stdlog "log"
-	"net/http"
 	"os"
-	"sync"
+	"time"
 
+	"github.com/alecthomas/kong"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 var cfg *Config
+var startTime time.Time
+
+var CLI struct {
+	CheckHealth CheckHealth `cmd help:"Request status from application server."`
+	Server      Server      `cmd help:"Run application in server mode."`
+}
 
 func main() {
+	startTime = time.Now()
+
 	config, err := NewConfig()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
@@ -27,27 +34,7 @@ func main() {
 	}
 	stdlog.SetOutput(log.Logger)
 
-	log.Info().Msg("Startup initiated.")
-	ctx, cancel := context.WithCancel(context.Background())
-	wg := &sync.WaitGroup{}
-
-	go HandleSignals(ctx, cancel, wg)
-	wg.Add(1)
-
-	if cfg.Debug {
-		go MonitorDiskUsage(ctx, wg)
-		wg.Add(1)
-	}
-
-	srv := NewServer()
-	go WaitForShutdown(ctx, srv, wg)
-	wg.Add(1)
-
-	log.Info().Msg("Startup complete.")
-	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		log.Error().Msgf("ListenAndServe: %v", err)
-	}
-
-	wg.Wait()
-	log.Info().Msg("Shutdown complete.")
+	cli := kong.Parse(&CLI)
+	err = cli.Run(cfg)
+	cli.FatalIfErrorf(err)
 }

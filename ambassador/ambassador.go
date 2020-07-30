@@ -82,3 +82,16 @@ func (a *Ambassador) ReceiveMessages() ([]Message, error) {
 	}
 	return messages, nil
 }
+
+func getQueueURL(sess *session.Session, queue string) (*string, error) {
+	svc := sqs.New(sess)
+
+	urlResult, err := svc.GetQueueUrl(&sqs.GetQueueUrlInput{
+		QueueName: aws.String(queue),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return urlResult.QueueUrl, nil
+}

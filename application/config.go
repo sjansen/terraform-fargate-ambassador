@@ -6,20 +6,26 @@ import (
 )
 
 type Config struct {
-	Debug   bool
-	LinkURL string
+	Debug bool
+
+	AmbassadorURL  string
+	ApplicationURL string
 }
 
 func NewConfig() (*Config, error) {
 	cfg := &Config{
-		LinkURL: os.Getenv("AMBASSADOR"),
-		Debug:   os.Getenv("DEBUG") != "",
+		Debug: os.Getenv("DEBUG") != "",
+
+		AmbassadorURL:  os.Getenv("AMBASSADOR"),
+		ApplicationURL: os.Getenv("APPLICATION"),
 	}
 
 	var err error
 	switch {
-	case cfg.LinkURL == "":
+	case cfg.AmbassadorURL == "":
 		err = errors.New("Missing required setting: $AMBASSADOR")
+	case cfg.ApplicationURL == "":
+		err = errors.New("Missing required setting: $APPLICATION")
 	}
 
 	return cfg, err
