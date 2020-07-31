@@ -2,6 +2,11 @@
 
 default: docker
 
+check-env:
+ifndef AWSCLI
+	$(error AWSCLI is undefined)
+endif
+
 build:
 	docker build \
 	    --compress --force-rm --pull \
@@ -23,24 +28,24 @@ docker:
 	    --remove-orphans
 
 images:
-	aws ecr list-images \
+	$(AWSCLI) ecr list-images \
 	    --repository-name `terraform output ambassador_repo_name`
-	aws ecr list-images \
+	$(AWSCLI) ecr list-images \
 	    --repository-name `terraform output application_repo_name`
 
-login:
-	aws ecr get-login-password \
+login: check-env
+	$(AWSCLI) ecr get-login-password \
 	| docker login \
 	    --username AWS \
 	    --password-stdin \
 	    `terraform output registry`
 
-push:
-	-aws ecr batch-delete-image \
+push: check-env
+	-$(AWSCLI) ecr batch-delete-image \
 	    --image-ids imageTag=latest \
 	    --repository-name `terraform output ambassador_repo_name`
 	docker push `terraform output ambassador_repo_url`:latest
-	-aws ecr batch-delete-image \
+	-$(AWSCLI) ecr batch-delete-image \
 	    --image-ids imageTag=latest \
 	    --repository-name `terraform output application_repo_name`
 	docker push `terraform output application_repo_url`:latest

@@ -34,7 +34,10 @@ resource "aws_ecs_service" "app" {
       aws_subnet.private.id,
     ]
   }
-  depends_on = [aws_cloudwatch_log_group.app]
+  depends_on = [
+    aws_cloudwatch_log_group.app,
+    aws_cloudwatch_log_group.containerinsights,
+  ]
   lifecycle {
     ignore_changes = [desired_count]
   }
