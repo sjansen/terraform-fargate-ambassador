@@ -53,7 +53,7 @@ resource "aws_ecs_task_definition" "app" {
     "name": "ambassador",
     "dependsOn": [{
       "containerName": "application",
-      "condition": "START"
+      "condition": "HEALTHY"
     }],
     "environment": [
       {"name": "AMBASSADOR", "value": "${var.ambassador_url}"},
@@ -86,6 +86,7 @@ resource "aws_ecs_task_definition" "app" {
     "name": "application",
     "environment": [
       {"name": "AMBASSADOR", "value": "${var.ambassador_url}"},
+      {"name": "APPLICATION", "value": "${var.application_url}"},
       {"name": "DEBUG", "value": "${var.debug ? "enabled" : ""}"}
     ],
     "essential": true,

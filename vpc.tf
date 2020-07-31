@@ -19,9 +19,7 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-resource "aws_security_group" "default" {
-  name        = "default"
-  description = "default VPC security group"
+resource "aws_default_security_group" "default" {
   vpc_id      = aws_vpc.app.id
   tags = {
     Name = "${var.vpc_name}-default"
