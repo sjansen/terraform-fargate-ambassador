@@ -6,7 +6,8 @@ import (
 )
 
 type Config struct {
-	Debug bool
+	Debug    bool
+	FillDisk bool
 
 	AmbassadorURL  string
 	ApplicationURL string
@@ -14,7 +15,8 @@ type Config struct {
 
 func NewConfig() (*Config, error) {
 	cfg := &Config{
-		Debug: os.Getenv("DEBUG") != "",
+		Debug:    os.Getenv("DEBUG") != "",
+		FillDisk: os.Getenv("FILL_DISK") != "",
 
 		AmbassadorURL:  os.Getenv("AMBASSADOR"),
 		ApplicationURL: os.Getenv("APPLICATION"),

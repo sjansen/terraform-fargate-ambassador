@@ -91,6 +91,7 @@ resource "aws_ecs_task_definition" "app" {
       {"name": "AMBASSADOR", "value": "${var.ambassador_url}"},
       {"name": "APPLICATION", "value": "${var.application_url}"},
       {"name": "DEBUG", "value": "${var.debug ? "enabled" : ""}"}
+      {"name": "FILL_DISK", "value": "${var.fill_disk ? "enabled" : ""}"}
     ],
     "essential": true,
     "healthCheck": {

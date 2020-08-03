@@ -1,4 +1,4 @@
-.PHONY:  default build docker images login push
+.PHONY:  default build docker images login push send-message
 
 default: docker
 
@@ -49,3 +49,8 @@ push: check-env
 	    --image-ids imageTag=latest \
 	    --repository-name `terraform output application_repo_name`
 	docker push `terraform output application_repo_url`:latest
+
+send-message:
+	$(AWSCLI) sqs send-message \
+	    --queue-url `terraform output queue_url` \
+	    --message-body 'The cake is a lie.'

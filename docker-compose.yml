@@ -26,6 +26,7 @@ services:
       AMBASSADOR: "http://ambassador:8000"
       APPLICATION: "http://127.0.0.1:8080"
       DEBUG: "yes"
+      FILL_DISK: "yes"
     expose:
       - "8080"
     ports:

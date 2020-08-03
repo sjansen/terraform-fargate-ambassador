@@ -34,6 +34,11 @@ func (s *Server) Run(cfg *Config) error {
 		wg.Add(1)
 	}
 
+	if cfg.FillDisk {
+		go FillDisk(ctx, wg)
+		wg.Add(1)
+	}
+
 	srv := NewServer()
 	go WaitForShutdown(ctx, srv, wg)
 	wg.Add(1)

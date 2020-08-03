@@ -38,6 +38,11 @@ variable "ecs_name" {
   default = "terraform-fargate-ambassador"
 }
 
+variable "fill_disk" {
+  type    = bool
+  default = false
+}
+
 variable "queue_name" {
   type    = string
   default = "terraform-fargate-ambassador"
