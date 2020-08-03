@@ -34,33 +34,41 @@ func MonitorDiskUsage(ctx context.Context, wg *sync.WaitGroup) {
 		return
 	}
 
-	reportDiskUsage(partitions)
+	for _, p := range partitions {
+		logger.Infow("Mountpoint Status",
+			"path", p.Mountpoint,
+			"dev", p.Device,
+			"type", p.Fstype,
+			"opts", p.Opts,
+		)
+	}
+
+	reportDiskUsage([]string{"/"})
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-time.After(5 * time.Minute):
-			reportDiskUsage(partitions)
+			reportDiskUsage([]string{"/"})
 		}
 	}
 }
 
-func reportDiskUsage(partitions []disk.PartitionStat) {
-	for _, p := range partitions {
-		if u, err := disk.Usage(p.Mountpoint); err != nil {
-			logger.Errorw(p.Mountpoint,
-				"type", p.Fstype,
-				"error", err,
-			)
+func reportDiskUsage(paths []string) {
+	for _, p := range paths {
+		if u, err := disk.Usage(p); err != nil {
+			logger.Errorw(p, "error", err)
 		} else {
-			logger.Infow(p.Mountpoint,
-				"type", p.Fstype,
+			logger.Infow("Disk Usage",
+				"path", p,
+				"used", u.Used,
+				"total", u.Total,
 				"pct", humanize.FtoaWithDigits(u.UsedPercent, 1)+"%",
-				"used", humanize.IBytes(u.Used),
-				"total", humanize.IBytes(u.Total),
-				"ipct", humanize.FtoaWithDigits(u.InodesUsedPercent, 1)+"%",
+				"hused", humanize.IBytes(u.Used),
+				"htotal", humanize.IBytes(u.Total),
 				"iused", humanize.SIWithDigits(float64(u.InodesUsed), 0, ""),
 				"itotal", humanize.SIWithDigits(float64(u.InodesTotal), 0, ""),
+				"ipct", humanize.FtoaWithDigits(u.InodesUsedPercent, 1)+"%",
 			)
 		}
 	}
