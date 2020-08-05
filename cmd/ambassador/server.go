@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -89,6 +90,7 @@ OuterLoop:
 func NewServer() *http.Server {
 	mux := &http.ServeMux{}
 	mux.HandleFunc("/echo", echoHandler)
+	mux.HandleFunc("/runner-callback", runnerCallbackHandler)
 	mux.HandleFunc("/status", statusHandler)
 	return &http.Server{
 		Addr:        "0.0.0.0:8000",
@@ -129,16 +131,56 @@ func requestLogger(h http.Handler) http.Handler {
 		m := httpsnoop.CaptureMetrics(h, w, r)
 		remote, _, _ := net.SplitHostPort(r.RemoteAddr)
 		logger.Debugw(r.Method,
-			"uri", r.URL.String(),
 			"code", m.Code,
-			"time", m.Duration/time.Millisecond,
+			"uri", r.URL.String(),
 			"ct", contentType,
+			"len", r.ContentLength,
+			"time", m.Duration/time.Millisecond,
 			"referer", r.Header.Get("Referer"),
 			"remote", remote,
 			"ua", r.Header.Get("User-Agent"),
 		)
 	}
 	return http.HandlerFunc(fn)
+}
+
+func runnerCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	buf := make([]byte, 128)
+
+	switch {
+	case r.Method != "POST":
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	case r.ContentLength < 0:
+		w.WriteHeader(http.StatusLengthRequired)
+		return
+	case r.ContentLength > int64(cap(buf)):
+		w.WriteHeader(http.StatusRequestEntityTooLarge)
+		return
+	}
+
+	contentType := r.Header.Get("Content-Type")
+	if contentType != "application/json" {
+		logger.Warnw("Runner Callback: invalid content",
+			"Content-Type", contentType,
+		)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	n, err := r.Body.Read(buf)
+	if err != nil && err != io.EOF {
+		logger.Errorw("Runner callback failed.",
+			"error", err,
+		)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	logger.Infow("Runner Callback",
+		"body", string(buf[0:n]),
+		"len", n,
+	)
 }
 
 func statusHandler(w http.ResponseWriter, r *http.Request) {

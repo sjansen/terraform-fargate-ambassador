@@ -1,6 +1,4 @@
 *
-!.dockerignore
 !.gitignore
 !Dockerfile
-!go.*
 !*.go

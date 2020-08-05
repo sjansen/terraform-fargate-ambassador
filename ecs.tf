@@ -90,7 +90,7 @@ resource "aws_ecs_task_definition" "app" {
     "environment": [
       {"name": "AMBASSADOR", "value": "${var.ambassador_url}"},
       {"name": "APPLICATION", "value": "${var.application_url}"},
-      {"name": "DEBUG", "value": "${var.debug ? "enabled" : ""}"}
+      {"name": "DEBUG", "value": "${var.debug ? "enabled" : ""}"},
       {"name": "FILL_DISK", "value": "${var.fill_disk ? "enabled" : ""}"}
     ],
     "essential": true,
@@ -110,7 +110,7 @@ resource "aws_ecs_task_definition" "app" {
         "awslogs-stream-prefix": "ecs"
       }
     },
-    "readonlyRootFilesystem": true,
+    "readonlyRootFilesystem": false,
     "startTimeout": 120,
     "stopTimeout": 120
 }]

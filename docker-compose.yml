@@ -2,7 +2,8 @@ version: '2.1'
 services:
   ambassador:
     build:
-      context: ./ambassador
+      context: .
+      dockerfile: ./cmd/ambassador/Dockerfile
     environment:
       AMBASSADOR: "http://127.0.0.1:8000"
       APPLICATION: "http://application:8080"
@@ -19,14 +20,27 @@ services:
       - "8000:8000"
     volumes:
       - $HOME/.aws/:/home/.aws/
-  application:
+  runner:
     build:
-      context: ./application
+      context: .
+      dockerfile: ./cmd/runner/Dockerfile
     environment:
-      AMBASSADOR: "http://ambassador:8000"
-      APPLICATION: "http://127.0.0.1:8080"
-      DEBUG: "yes"
+      InitializationCallbackUrl: "http://ambassador:8000/runner-callback"
+      Runner__LogLevel: "1"
+      Runner__CountThreads: "4"
     expose:
       - "8080"
     ports:
-      - "8080:8080"
+      - "8080:80"
+  application:
+    build:
+      context: .
+      dockerfile: ./cmd/application/Dockerfile
+    environment:
+      AMBASSADOR: "http://ambassador:8000"
+      APPLICATION: "http://127.0.0.1:4000"
+      DEBUG: "yes"
+    expose:
+      - "4000"
+    ports:
+      - "4000:4000"
