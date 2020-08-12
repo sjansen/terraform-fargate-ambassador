@@ -14,5 +14,6 @@ require (
 	github.com/rs/zerolog v1.19.0
 	github.com/shirou/gopsutil v2.20.6+incompatible
 	github.com/vrischmann/envconfig v1.2.0
+	go.uber.org/goleak v1.1.10
 	go.uber.org/zap v1.15.0
 )
